@@ -1,7 +1,13 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-DATABASE_URL = "postgresql+psycopg://contacts_user:contacts_password@database:5432/contacts"
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg://contacts_user:contacts_password@localhost:5432/contacts"
+)
 
 engine = create_engine(DATABASE_URL)
 
