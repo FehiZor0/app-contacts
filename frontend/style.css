@@ -1,0 +1,412 @@
+/* =========================
+   Général
+========================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+
+  background-color: #f5f5f5;
+
+  color: #111111;
+}
+
+/* =========================
+   En-tête
+========================= */
+
+.header {
+  height: 70px;
+
+  background-color: #111111;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 40px;
+}
+
+/* Logo */
+
+.logo {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo img {
+  width: 24px;
+  height: 24px;
+
+  filter: invert(1);
+}
+
+/* =========================
+   Contenu principal
+========================= */
+
+.container {
+  max-width: 1200px;
+
+  margin: 40px auto;
+
+  padding: 0 20px;
+}
+
+/* Introduction */
+
+.intro {
+  margin-bottom: 30px;
+}
+
+.intro h1 {
+  font-size: 32px;
+
+  margin-bottom: 8px;
+}
+
+.intro p {
+  color: #666666;
+
+  font-size: 16px;
+}
+
+/* =========================
+   Boutons
+========================= */
+
+.btn {
+  border: none;
+
+  padding: 10px 18px;
+
+  border-radius: 6px;
+
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+/* Bouton principal */
+
+.btn-primary {
+  background-color: #111111;
+
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background-color: #2a2a2a;
+}
+
+.btn-primary img {
+  width: 17px;
+  height: 17px;
+
+  filter: invert(1);
+}
+
+/* Bouton secondaire */
+
+.btn-secondary {
+  background-color: #ffffff;
+
+  color: #111111;
+
+  border: 1px solid #cccccc;
+}
+
+.btn-secondary:hover {
+  background-color: #eeeeee;
+}
+
+/* =========================
+   Recherche
+========================= */
+
+.search-section {
+  margin-bottom: 20px;
+}
+
+/*
+    Le conteneur sert de référence
+    pour positionner l'icône.
+*/
+
+.search-box {
+  position: relative;
+
+  width: 100%;
+}
+
+/*
+    Icône de recherche
+*/
+
+.search-box img {
+  position: absolute;
+
+  left: 15px;
+  top: 50%;
+
+  width: 18px;
+  height: 18px;
+
+  transform: translateY(-50%);
+
+  z-index: 2;
+}
+
+/*
+    Champ de recherche
+*/
+
+#searchInput {
+  width: 100%;
+
+  height: 45px;
+
+  /*
+        Espace à gauche pour
+        laisser la place à l'icône
+    */
+
+  padding: 0 15px 0 45px;
+
+  border: 1px solid #dddddd;
+
+  border-radius: 6px;
+
+  background-color: #ffffff;
+
+  font-size: 15px;
+
+  outline: none;
+}
+
+#searchInput:focus {
+  border-color: #666666;
+}
+
+/* =========================
+   Tableau
+========================= */
+
+.contacts-section {
+  background-color: #ffffff;
+
+  border: 1px solid #e5e5e5;
+
+  border-radius: 8px;
+
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+thead {
+  background-color: #f5f5f5;
+}
+
+th,
+td {
+  padding: 16px;
+
+  text-align: left;
+
+  border-bottom: 1px solid #e5e5e5;
+}
+
+th {
+  font-size: 14px;
+
+  color: #666666;
+
+  font-weight: 600;
+}
+
+td {
+  font-size: 14px;
+}
+
+tbody tr:hover {
+  background-color: #fafafa;
+}
+
+/* =========================
+   Actions
+========================= */
+
+.action-buttons {
+  display: flex;
+
+  gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 7px 10px;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.btn-edit {
+  background-color: #ffffff;
+
+  color: #111111;
+
+  border: 1px solid #cccccc;
+}
+
+.btn-delete {
+  background-color: #111111;
+
+  color: #ffffff;
+
+  border: 1px solid #111111;
+}
+
+/* =========================
+   Modal
+========================= */
+
+.modal {
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background-color: rgba(0, 0, 0, 0.5);
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+
+  max-width: 500px;
+
+  background-color: #ffffff;
+
+  border-radius: 8px;
+
+  padding: 25px;
+}
+
+/* =========================
+   En-tête du modal
+========================= */
+
+.modal-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 25px;
+}
+
+.modal-header h2 {
+  font-size: 22px;
+}
+
+/* Bouton fermer */
+
+.btn-close {
+  width: 35px;
+  height: 35px;
+
+  border: none;
+
+  background: none;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close img {
+  width: 20px;
+  height: 20px;
+}
+
+/* =========================
+   Formulaire
+========================= */
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+
+  padding: 11px 12px;
+
+  border: 1px solid #cccccc;
+
+  border-radius: 5px;
+
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  outline: none;
+
+  border-color: #666666;
+}
+
+/* =========================
+   Actions du formulaire
+========================= */
+
+.modal-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 25px;
+}

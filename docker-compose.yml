@@ -1,0 +1,43 @@
+services:
+  database:
+    image: postgres:17
+
+    container_name: app-contacts-db
+
+    environment:
+      POSTGRES_DB: contacts
+      POSTGRES_USER: contacts_user
+      POSTGRES_PASSWORD: contacts_password
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: app-contacts-backend
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: app-contacts-frontend
+
+    ports:
+      - "8080:80"
+
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

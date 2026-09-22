@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Contact Manager</title>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- =========================
+         En-tête
+    ========================== -->
+
+    <header class="header">
+      <div class="logo">
+        <img src="icons/users.svg" alt="Contacts" />
+
+        <span>Contact Manager</span>
+      </div>
+
+      <button id="btnAjouter" class="btn btn-primary">
+        <img src="icons/plus.svg" alt="" />
+
+        <span>Ajouter</span>
+      </button>
+    </header>
+
+    <!-- =========================
+         Contenu principal
+    ========================== -->
+
+    <main class="container">
+      <section class="intro">
+        <h1>Gestion des contacts</h1>
+
+        <p>Gérez facilement vos contacts</p>
+      </section>
+
+      <!-- =========================
+             Recherche
+        ========================== -->
+
+      <section class="search-section">
+        <div class="search-box">
+          <img src="icons/search.svg" alt="" />
+
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Rechercher un contact..."
+          />
+        </div>
+      </section>
+
+      <!-- =========================
+             Tableau des contacts
+        ========================== -->
+
+      <section class="contacts-section">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Email</th>
+              <th>Téléphone</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="contactsTableBody">
+            <!--
+                        Les contacts seront ajoutés
+                        ici avec JavaScript
+                    -->
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <!-- =========================
+         Fenêtre modale
+    ========================== -->
+
+    <div id="contactModal" class="modal">
+      <div class="modal-content">
+        <!-- En-tête de la fenêtre -->
+
+        <div class="modal-header">
+          <h2 id="modalTitle">Ajouter un contact</h2>
+
+          <button id="btnFermer" class="btn-close">
+            <img src="icons/x.svg" alt="Fermer" />
+          </button>
+        </div>
+
+        <!-- Formulaire -->
+
+        <form id="contactForm">
+          <!-- Nom -->
+
+          <div class="form-group">
+            <label for="nom"> Nom </label>
+
+            <input type="text" id="nom" name="nom" required />
+          </div>
+
+          <!-- Prénom -->
+
+          <div class="form-group">
+            <label for="prenom"> Prénom </label>
+
+            <input type="text" id="prenom" name="prenom" required />
+          </div>
+
+          <!-- Email -->
+
+          <div class="form-group">
+            <label for="email"> Email </label>
+
+            <input type="email" id="email" name="email" required />
+          </div>
+
+          <!-- Téléphone -->
+
+          <div class="form-group">
+            <label for="telephone"> Téléphone </label>
+
+            <input type="text" id="telephone" name="telephone" />
+          </div>
+
+          <!-- Boutons -->
+
+          <div class="modal-actions">
+            <button type="button" id="btnAnnuler" class="btn btn-secondary">
+              Annuler
+            </button>
+
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- JavaScript -->
+
+    <script src="script.js"></script>
+  </body>
+</html>
