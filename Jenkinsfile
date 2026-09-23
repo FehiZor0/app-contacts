@@ -22,5 +22,13 @@ pipeline {
             }
         }
 
+        stage('Test SSH VM') {
+            steps {
+                sshagent(credentials: ['vm-ssh-key']) {
+                    sh 'ssh -o StrictHostKeyChecking=yes fehizoro@192.168.56.102 "echo Jenkins-connexion-OK"'
+                }
+            }   
+        }
+
     }
 }
