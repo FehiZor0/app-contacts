@@ -22,12 +22,16 @@ pipeline {
             }
         }
 
-        stage('Test SSH VM') {
+        stage('Deploy') {
             steps {
                 sshagent(credentials: ['vm-ssh-key']) {
-                    sh 'ssh -o StrictHostKeyChecking=yes fehizoro@192.168.56.102 "echo Jenkins-connexion-OK"'
+                    sh '''
+                        ansible-playbook \
+                        -i ansible/inventory.ini \
+                        ansible/deploy.yml
+                    '''
                 }
-            }   
+            }
         }
 
     }
