@@ -1,0 +1,27 @@
+---
+- name: Déploiement de app-contacts
+  hosts: target
+  become: false
+
+  tasks:
+    - name: Récupérer le projet depuis GitHub
+      ansible.builtin.git:
+        repo: "https://github.com/FehiZor0/app-contacts.git"
+        dest: "/home/fehizoro/app-contacts"
+        version: main
+        update: true
+
+    - name: Déployer l'application avec Docker Compose
+      ansible.builtin.command:
+        cmd: docker compose up -d --build
+        chdir: /home/fehizoro/app-contacts
+
+    - name: Vérifier la présence du projet
+      ansible.builtin.stat:
+        path: /home/fehizoro/app-contacts
+      register: project
+
+    - name: Afficher le résultat
+      ansible.builtin.debug:
+        msg: "Le projet app-contacts est présent et à jour"
+      when: project.stat.exists
