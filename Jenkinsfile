@@ -16,10 +16,7 @@ pipeline {
                     echo "Attente de la base de données de test..."
                     sleep 5
 
-                    docker compose run --rm \
-                        -e DATABASE_URL=postgresql+psycopg://contacts_user:contacts_password@test-database:5432/contacts_test \
-                        backend \
-                        pytest
+                    docker compose run --rm backend-test pytest
                 '''
             }
         }
