@@ -10,6 +10,10 @@ from . import models
 
 app = FastAPI()
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 
 app.add_middleware(
     CORSMiddleware,

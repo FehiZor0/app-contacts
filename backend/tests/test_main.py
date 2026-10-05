@@ -19,6 +19,11 @@ def test_root():
         "message": "Bienvenue dans l'API Contacts"
     }
 
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
 
 def test_get_contacts():
     response = client.get("/contacts")

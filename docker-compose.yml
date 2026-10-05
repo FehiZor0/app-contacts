@@ -49,6 +49,16 @@ services:
       database:
         condition: service_healthy
 
+  backend-test:
+    build:
+      context: ./backend
+    container_name: app-contacts-backend-test
+    environment:
+      DATABASE_URL: postgresql+psycopg://${TEST_POSTGRES_USER}:${TEST_POSTGRES_PASSWORD}@test-database:5432/${TEST_POSTGRES_DB}
+    depends_on:
+      test-database:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
