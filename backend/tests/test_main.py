@@ -57,7 +57,6 @@ def test_create_contact():
     assert "id" in data
 
 
-
 def test_update_contact():
     contact = {
         "nom": "Test",
@@ -95,6 +94,24 @@ def test_update_contact():
     assert data["telephone"] == "0322222222"
 
 
+def test_update_contact_not_found():
+    contact = {
+        "nom": "Test",
+        "prenom": "Inexistant",
+        "email": "inexistant@example.com",
+        "telephone": "0344444444"
+    }
+
+    response = client.put(
+        "/contacts/999999",
+        json=contact
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Contact non trouvé"
+    }
+
 
 def test_delete_contact():
     contact = {
@@ -115,9 +132,18 @@ def test_delete_contact():
     assert response.status_code == 200
 
     assert response.json() == {
-    "message": "Contact supprimé avec succès"
+        "message": "Contact supprimé avec succès"
     }
 
     get_response = client.get(f"/contacts/{contact_id}")
 
     assert get_response.status_code == 404
+
+
+def test_delete_contact_not_found():
+    response = client.delete("/contacts/999999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Contact non trouvé"
+    }

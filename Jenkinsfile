@@ -10,7 +10,17 @@ pipeline {
 
         stage('Tests') {
             steps {
-                sh 'docker compose run --rm backend pytest'
+                sh '''
+                    docker compose up -d test-database
+
+                    echo "Attente de la base de données de test..."
+                    sleep 5
+
+                    docker compose run --rm \
+                        -e DATABASE_URL=postgresql+psycopg://contacts_user:contacts_password@test-database:5432/contacts_test \
+                        backend \
+                        pytest
+                '''
             }
         }
 
@@ -21,15 +31,14 @@ pipeline {
         }
 
         stage('Deploy') {
-            // Déploiement uniquement depuis la branche main
             when {
                 expression {
                     env.BRANCH_NAME == 'main' || env.GIT_BRANCH == 'origin/main'
                 }
             }
+
             steps {
                 sshagent(credentials: ['vm-ssh-key']) {
-                    // Le commit testé par Jenkins est celui qui sera déployé
                     sh "ansible-playbook -i ansible/inventory.ini ansible/deploy.yml -e git_commit=${env.GIT_COMMIT}"
                 }
             }
@@ -38,12 +47,13 @@ pipeline {
 
     post {
         always {
-            // Arrête et supprime la base et les conteneurs lancés pour les tests
             sh 'docker compose down -v --remove-orphans || true'
         }
+
         success {
             echo 'Pipeline terminé avec succès'
         }
+
         failure {
             echo 'Pipeline en échec : consulter les logs du stage concerné'
         }
