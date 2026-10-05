@@ -38,6 +38,7 @@ services:
       retries: 10
 
   backend:
+    image: fehizor0/app-contacts-backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
     container_name: app-contacts-backend
@@ -60,6 +61,7 @@ services:
         condition: service_healthy
 
   frontend:
+    image: fehizor0/app-contacts-frontend:${IMAGE_TAG:-latest}
     build:
       context: ./frontend
     container_name: app-contacts-frontend

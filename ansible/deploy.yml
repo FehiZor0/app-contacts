@@ -38,11 +38,19 @@
           {{ git_commit }}
       when: git_commit is match('^[0-9a-f]{40}$')
 
-    - name: Déployer l'application avec Docker Compose
-      community.docker.docker_compose_v2:
-        project_src: "{{ project_dir }}"
-        build: always
-        state: present
+    - name: Télécharger les images Docker depuis Docker Hub
+      ansible.builtin.command:
+        cmd: docker compose pull backend frontend
+        chdir: "{{ project_dir }}"
+      environment:
+        IMAGE_TAG: "{{ git_commit }}"
+
+    - name: Démarrer l'application sans reconstruire les images
+      ansible.builtin.command:
+        cmd: docker compose up -d --no-build database backend frontend
+        chdir: "{{ project_dir }}"
+      environment:
+        IMAGE_TAG: "{{ git_commit }}"
 
     - name: Vérifier que le backend est disponible
       ansible.builtin.uri:
