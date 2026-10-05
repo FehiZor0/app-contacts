@@ -1,7 +1,6 @@
 pipeline {
 agent any
 
-```
 options {
     timestamps()
     disableConcurrentBuilds()
@@ -94,6 +93,5 @@ post {
         echo 'Pipeline en échec : consulter les logs du stage concerné'
     }
 }
-```
 
 }
