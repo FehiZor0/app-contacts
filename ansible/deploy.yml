@@ -15,6 +15,29 @@
         version: "{{ git_commit }}"
         force: true
 
+    - name: Vérifier le commit réellement récupéré
+      ansible.builtin.command:
+        cmd: git rev-parse HEAD
+        chdir: "{{ project_dir }}"
+      register: deployed_commit
+      changed_when: false
+
+    - name: Afficher le commit déployé
+      ansible.builtin.debug:
+        msg: "Commit déployé : {{ deployed_commit.stdout }}"
+
+    - name: Vérifier la correspondance avec le commit Jenkins
+      ansible.builtin.assert:
+        that:
+          - deployed_commit.stdout == git_commit
+        fail_msg: >-
+          Le commit déployé {{ deployed_commit.stdout }}
+          ne correspond pas au commit demandé {{ git_commit }}.
+        success_msg: >-
+          Le commit déployé correspond au commit Jenkins :
+          {{ git_commit }}
+      when: git_commit is match('^[0-9a-f]{40}$')
+
     - name: Déployer l'application avec Docker Compose
       community.docker.docker_compose_v2:
         project_src: "{{ project_dir }}"
