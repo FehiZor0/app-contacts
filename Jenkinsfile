@@ -6,11 +6,21 @@ pipeline {
         disableConcurrentBuilds()
     }
 
+    environment {
+        POSTGRES_DB = credentials('POSTGRES_DB')
+        POSTGRES_USER = credentials('POSTGRES_USER')
+        POSTGRES_PASSWORD = credentials('POSTGRES_PASSWORD')
+        TEST_POSTGRES_DB = credentials('TEST_POSTGRES_DB')
+    }
+
     stages {
 
         stage('Tests') {
             steps {
                 sh '''
+                    export TEST_POSTGRES_USER="$POSTGRES_USER"
+                    export TEST_POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
+
                     docker compose up -d test-database
 
                     echo "Attente de la base de données de test..."
