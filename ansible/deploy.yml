@@ -3,25 +3,30 @@
   hosts: target
   become: false
 
+  vars:
+    project_dir: /home/fehizoro/app-contacts
+    # Surchargé par Jenkins avec -e git_commit=<sha> ; "main" par défaut en lancement manuel
+    git_commit: main
+
   tasks:
-    - name: Récupérer le projet depuis GitHub
+    - name: Récupérer le projet depuis GitHub au commit voulu
       ansible.builtin.git:
         repo: "https://github.com/FehiZor0/app-contacts.git"
-        dest: "/home/fehizoro/app-contacts"
-        version: main
-        update: true
+        dest: "{{ project_dir }}"
+        version: "{{ git_commit }}"
+        force: true
 
     - name: Déployer l'application avec Docker Compose
-      ansible.builtin.command:
-        cmd: docker compose up -d --build
-        chdir: /home/fehizoro/app-contacts
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        build: always
+        state: present
 
-    - name: Vérifier la présence du projet
-      ansible.builtin.stat:
-        path: /home/fehizoro/app-contacts
-      register: project
-
-    - name: Afficher le résultat
-      ansible.builtin.debug:
-        msg: "Le projet app-contacts est présent et à jour"
-      when: project.stat.exists
+    - name: Vérifier que le frontend répond
+      ansible.builtin.uri:
+        url: http://localhost:8081
+        status_code: 200
+      register: health
+      retries: 10
+      delay: 3
+      until: health.status == 200
