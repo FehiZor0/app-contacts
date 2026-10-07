@@ -4,7 +4,7 @@ Application web de gestion de contacts développée dans le cadre d'un projet de
 
 L'application permet de gérer des contacts à travers une interface web et une API REST. Elle est composée d'un frontend, d'un backend et d'une base de données PostgreSQL.
 
-Le projet intègre également une chaîne d'automatisation permettant d'exécuter les tests, de construire les conteneurs et de déployer automatiquement l'application sur un serveur Ubuntu.
+Le projet intègre également une chaîne d'automatisation permettant d'exécuter les tests, de construire les images Docker, de les publier sur Docker Hub et de déployer automatiquement l'application sur un serveur Ubuntu.
 
 ---
 
@@ -43,12 +43,14 @@ L'application est organisée autour de trois services principaux :
                              │
                              ▼
                     ┌─────────────────┐
-                    │    PostgreSQL   │
-                    │     Database    │
+                    │   PostgreSQL    │
+                    │    Database     │
                     └─────────────────┘
 ```
 
-Les services sont conteneurisés avec Docker et exécutés avec Docker Compose.
+Les services applicatifs sont conteneurisés avec Docker et exécutés avec Docker Compose.
+
+La base de données PostgreSQL utilise un volume Docker afin de conserver les données indépendamment du cycle de vie du conteneur.
 
 ---
 
@@ -71,9 +73,10 @@ Les services sont conteneurisés avec Docker et exécutés avec Docker Compose.
 
 - **Git** : gestion des versions du code source.
 - **GitHub** : hébergement du dépôt et déclenchement du pipeline par webhook.
-- **Jenkins** : automatisation des tests, de la construction et du déploiement.
-- **Ansible** : automatisation de la configuration et du déploiement sur le serveur.
-- **SSH** : communication sécurisée entre la machine d'administration et le serveur Ubuntu.
+- **Jenkins** : automatisation des tests, de la construction des images et du processus de déploiement.
+- **Docker Hub** : registre utilisé pour stocker et distribuer les images Docker construites par Jenkins.
+- **Ansible** : automatisation du déploiement sur le serveur Ubuntu.
+- **SSH** : communication sécurisée entre Jenkins et le serveur Ubuntu.
 - **ngrok** : exposition temporaire de Jenkins sur Internet afin de permettre à GitHub d'envoyer les webhooks.
 
 ---
@@ -137,14 +140,20 @@ Créer un fichier `.env` à la racine du projet :
 ```env
 POSTGRES_DB=contacts
 POSTGRES_USER=contacts_user
-POSTGRES_PASSWORD=<mot_de-passe-postgresql>
+POSTGRES_PASSWORD=change_me
 
 TEST_POSTGRES_DB=contacts_test
 TEST_POSTGRES_USER=contacts_user
-TEST_POSTGRES_PASSWORD=contacts_password
+TEST_POSTGRES_PASSWORD=change_me
 ```
 
+Les valeurs présentées ci-dessus sont des exemples. Les véritables informations de connexion doivent être définies dans l'environnement d'exécution et ne doivent pas être versionnées.
+
 Le fichier `.env` est exclu du dépôt grâce au fichier `.gitignore`.
+
+Le backend nécessite également la variable d'environnement `DATABASE_URL`. Elle est construite par Docker Compose à partir des variables PostgreSQL.
+
+Si cette variable n'est pas définie, le backend refuse de démarrer.
 
 ---
 
@@ -212,6 +221,8 @@ Une réponse correcte est :
 }
 ```
 
+Le service PostgreSQL n'a pas besoin d'être exposé directement sur le réseau de la machine hôte. Le backend communique avec la base de données à travers le réseau interne Docker Compose.
+
 ---
 
 ## 9. Exécution des tests
@@ -240,6 +251,8 @@ Les tests couvrent notamment :
 - la suppression d'un contact ;
 - la gestion des contacts inexistants.
 
+La base de données de test est distincte de la base de données utilisée par l'application afin de ne pas modifier les données applicatives pendant les tests.
+
 ---
 
 ## 10. Intégration continue et déploiement
@@ -261,23 +274,29 @@ Développeur
      │
      ├── Tests
      │
-     ├── Build Docker
+     ├── Build des images Docker
      │
-     └── Déploiement
-             │
-             ▼
-          Ansible
-             │
-             │ SSH
-             ▼
-       Ubuntu Server
-             │
-             ▼
-       Docker Compose
-             │
-             ▼
+     ├── Push vers Docker Hub
+     │
+     └── Déploiement avec Ansible
+              │
+              │ SSH
+              ▼
+        Ubuntu Server
+              │
+              ▼
+        Docker Compose
+              │
+              ▼
          Application
 ```
+
+Le pipeline comporte donc quatre étapes principales :
+
+1. exécution des tests ;
+2. construction des images Docker ;
+3. publication des images sur Docker Hub ;
+4. déploiement de l'application sur le serveur Ubuntu.
 
 ---
 
@@ -289,8 +308,6 @@ Le pipeline est défini dans le fichier :
 Jenkinsfile
 ```
 
-Il comporte principalement trois étapes.
-
 ### Tests
 
 Jenkins démarre une base PostgreSQL dédiée aux tests puis exécute la suite de tests :
@@ -300,17 +317,35 @@ docker compose up -d test-database
 docker compose run --rm backend-test pytest
 ```
 
-Si un test échoue, le pipeline s'arrête.
+Si un test échoue, le pipeline s'arrête et les étapes suivantes ne sont pas exécutées.
 
 ### Build Docker
 
-Lorsque les tests sont réussis, Jenkins construit les images Docker :
+Lorsque les tests sont réussis, Jenkins construit les images Docker du backend et du frontend.
 
-```bash
-docker compose build
+Les images sont associées au SHA du commit Git traité par Jenkins afin d'assurer leur traçabilité.
+
+Par exemple :
+
+```text
+fehizor0/app-contacts-backend:<commit-sha>
+fehizor0/app-contacts-frontend:<commit-sha>
 ```
 
-Cette étape permet notamment de vérifier que l'application peut être correctement construite à partir du code validé.
+### Push vers Docker Hub
+
+Après la construction, Jenkins se connecte à Docker Hub à l'aide d'un identifiant sécurisé enregistré dans Jenkins Credentials.
+
+Les images sont ensuite publiées dans les dépôts :
+
+```text
+fehizor0/app-contacts-backend
+fehizor0/app-contacts-frontend
+```
+
+Le SHA du commit est utilisé comme tag des images.
+
+Cela permet d'associer précisément une image Docker à une version du code source.
 
 ### Déploiement
 
@@ -320,9 +355,11 @@ Si le pipeline est exécuté sur la branche `main`, Jenkins lance Ansible :
 ansible-playbook -i ansible/inventory.ini ansible/deploy.yml
 ```
 
-Jenkins transmet également à Ansible le commit exact qui a été traité.
+Jenkins transmet également à Ansible le SHA exact du commit qui a été traité.
 
-Cela permet de garantir que le serveur déploie la même version du code que celle validée par Jenkins.
+Ansible récupère alors la configuration correspondant à ce commit et demande au serveur de télécharger les images Docker correspondantes depuis Docker Hub.
+
+Les images ne sont pas reconstruites sur le serveur.
 
 ---
 
@@ -337,12 +374,28 @@ ansible/deploy.yml
 Ansible :
 
 1. se connecte au serveur Ubuntu par SSH ;
-2. récupère le projet depuis GitHub ;
-3. sélectionne le commit demandé ;
-4. vérifie le commit réellement récupéré ;
-5. construit et démarre les services avec Docker Compose ;
+2. récupère le projet depuis GitHub au commit demandé ;
+3. vérifie le commit réellement récupéré ;
+4. télécharge les images Docker correspondantes depuis Docker Hub ;
+5. démarre les services avec Docker Compose sans reconstruire les images ;
 6. vérifie la disponibilité du backend ;
 7. vérifie la disponibilité du frontend.
+
+Le déploiement utilise notamment :
+
+```bash
+docker compose pull backend frontend
+```
+
+pour récupérer les images depuis Docker Hub, puis :
+
+```bash
+docker compose up -d --no-build database backend frontend
+```
+
+pour démarrer les services sans reconstruire les images.
+
+Cette approche permet de déployer sur le serveur les mêmes images Docker que celles construites et publiées par Jenkins.
 
 Le serveur cible est défini dans :
 
@@ -369,7 +422,7 @@ La commande utilisée est :
 git rev-parse HEAD
 ```
 
-Le résultat est comparé au commit transmis par Jenkins.
+Le résultat est comparé au SHA transmis par Jenkins.
 
 Si les deux commits sont identiques :
 
@@ -377,7 +430,21 @@ Si les deux commits sont identiques :
 Le commit déployé correspond au commit Jenkins
 ```
 
+Le déploiement peut alors continuer.
+
 Dans le cas contraire, le déploiement est interrompu.
+
+Le SHA du commit est également utilisé comme tag des images Docker. Il permet ainsi d'assurer une correspondance entre :
+
+```text
+Code source
+     ↕
+Commit Git
+     ↕
+Image Docker
+     ↕
+Version déployée
+```
 
 ---
 
@@ -417,7 +484,9 @@ Le fichier :
 
 est exclu du dépôt grâce à `.gitignore`.
 
-Les variables nécessaires au pipeline Jenkins sont également configurées dans Jenkins Credentials plutôt que directement dans le `Jenkinsfile`.
+Les variables sensibles nécessaires au pipeline Jenkins sont également configurées dans **Jenkins Credentials** plutôt que directement dans le `Jenkinsfile`.
+
+Les identifiants permettant à Jenkins de publier les images sur Docker Hub sont également stockés dans Jenkins Credentials.
 
 Cette organisation évite d'inscrire les informations sensibles directement dans le code source.
 
@@ -445,7 +514,7 @@ Attention : la suppression des volumes entraîne la suppression des données sto
 
 L'objectif principal du projet est de réduire les interventions manuelles lors de l'intégration et du déploiement de l'application.
 
-Le processus permet ainsi de passer automatiquement :
+Le processus permet ainsi de passer automatiquement de la modification du code jusqu'à la vérification de l'application :
 
 ```text
 Modification du code
@@ -456,9 +525,13 @@ Push GitHub
         ↓
 Tests automatisés
         ↓
-Construction Docker
+Construction des images Docker
         ↓
-Déploiement Ansible
+Publication sur Docker Hub
+        ↓
+Déploiement avec Ansible
+        ↓
+Pull des images sur Ubuntu Server
         ↓
 Démarrage avec Docker Compose
         ↓
@@ -466,3 +539,5 @@ Vérification de l'application
 ```
 
 Cette automatisation permet d'obtenir un processus de déploiement plus reproductible, contrôlé et fiable.
+
+L'utilisation du SHA du commit comme identifiant des images Docker permet également d'assurer la traçabilité entre le code source validé, les images construites et la version effectivement déployée.
