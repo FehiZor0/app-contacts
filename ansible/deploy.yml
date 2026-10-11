@@ -15,16 +15,6 @@
         version: "{{ git_commit }}"
         force: true
 
-    - name: Générer le fichier .env sur la cible
-      ansible.builtin.copy:
-        dest: "{{ project_dir }}/.env"
-        mode: "0600"
-        content: |
-          POSTGRES_DB={{ lookup('env', 'POSTGRES_DB') }}
-          POSTGRES_USER={{ lookup('env', 'POSTGRES_USER') }}
-          POSTGRES_PASSWORD={{ lookup('env', 'POSTGRES_PASSWORD') }}
-      no_log: true
-
     - name: Vérifier le commit réellement récupéré
       ansible.builtin.command:
         cmd: git rev-parse HEAD
