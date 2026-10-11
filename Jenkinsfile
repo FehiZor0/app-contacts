@@ -21,10 +21,7 @@ stages {
                 export TEST_POSTGRES_USER="$POSTGRES_USER"
                 export TEST_POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 
-                docker compose up -d test-database
-
-                echo "Attente de la base de données de test..."
-                sleep 5
+                docker compose up -d --wait test-database
 
                 docker compose run --rm backend-test pytest
             '''
@@ -42,6 +39,11 @@ stages {
     }
 
     stage('Push Docker Hub') {
+        when {
+            expression {
+                env.BRANCH_NAME == 'main' || env.GIT_BRANCH == 'origin/main'
+            }
+        }
         steps {
             withCredentials([
                 usernamePassword(
