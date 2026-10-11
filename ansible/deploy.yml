@@ -5,9 +5,15 @@
 
   vars:
     project_dir: /home/fehizoro/app-contacts
-    git_commit: main
 
   tasks:
+    - name: Vérifier que le commit demandé est un SHA complet
+      ansible.builtin.assert:
+        that:
+          - git_commit is defined
+          - git_commit is match('^[0-9a-f]{40}$')
+        fail_msg: "git_commit absent ou invalide : fournir un SHA de 40 caractères (-e git_commit=<sha>)."
+
     - name: Récupérer le projet depuis GitHub au commit voulu
       ansible.builtin.git:
         repo: "https://github.com/FehiZor0/app-contacts.git"
@@ -36,7 +42,6 @@
         success_msg: >-
           Le commit déployé correspond au commit Jenkins :
           {{ git_commit }}
-      when: git_commit is match('^[0-9a-f]{40}$')
 
     - name: Télécharger les images Docker depuis Docker Hub
       ansible.builtin.command:
@@ -51,6 +56,28 @@
         chdir: "{{ project_dir }}"
       environment:
         IMAGE_TAG: "{{ git_commit }}"
+
+    - name: Lire l'image des conteneurs applicatifs en cours d'exécution
+      ansible.builtin.command:
+        argv:
+          - docker
+          - inspect
+          - --format
+          - "{{ '{{.Config.Image}}' }}"
+          - "{{ item }}"
+      loop:
+        - app-contacts-backend
+        - app-contacts-frontend
+      register: running_images
+      changed_when: false
+
+    - name: Vérifier que les conteneurs tournent sur le tag attendu
+      ansible.builtin.assert:
+        that:
+          - item.stdout.endswith(':' ~ git_commit)
+        fail_msg: "Le conteneur {{ item.item }} utilise l'image {{ item.stdout }} au lieu du tag {{ git_commit }}."
+        success_msg: "{{ item.item }} tourne sur {{ item.stdout }}"
+      loop: "{{ running_images.results }}"
 
     - name: Vérifier que le backend est disponible
       ansible.builtin.uri:
