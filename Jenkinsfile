@@ -23,7 +23,7 @@ stages {
 
                 docker compose up -d --wait test-database
 
-                docker compose run --rm backend-test pytest
+                docker compose run --rm --build backend-test pytest
             '''
         }
     }
